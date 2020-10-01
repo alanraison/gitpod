@@ -45,7 +45,6 @@ import { GitpodPreviewLinkNormalizer } from "./user-message/GitpodPreviewLinkNor
 import { PreviewLinkNormalizer } from "@theia/preview/lib/browser/preview-link-normalizer";
 import { GitpodMenuModelRegistry } from "./gitpod-menu";
 import { WaitForContentContribution } from './waitfor-content-contribution';
-import { ContentReadyServiceServer, ContentReadyService } from '../common/content-ready-service';
 import { GitpodWebSocketConnectionProvider } from './gitpod-ws-connection-provider';
 import { GitHostWatcher } from './git-host-watcher';
 import { GitpodExternalUriService } from './gitpod-external-uri-service';
@@ -62,6 +61,8 @@ import { ConnectionStatusOptions } from '@theia/core/lib/browser/connection-stat
 import { extensionsModule } from './extensions/extensions-module';
 import { GitpodUserStorageContribution } from './gitpod-user-storage-contribution';
 import { GitpodUserStorageProvider } from './gitpod-user-storage-provider';
+import { GitpodTaskContribution } from './gitpod-task-contribution';
+import { GitpodTaskServer, gitpodTaskServicePath } from '../common/gitpod-task-protocol';
 
 export default new ContainerModule((bind, unbind, isBound, rebind) => {
     rebind(CommonFrontendContribution).to(GitpodCommonFrontendContribution).inSingletonScope();
@@ -81,6 +82,9 @@ export default new ContainerModule((bind, unbind, isBound, rebind) => {
     bind(GitpodOpenContext).toSelf().inSingletonScope();
     bind(FrontendApplicationContribution).toService(GitpodOpenContext);
     rebind(InitialGitHubDataProvider).toService(GitpodOpenContext);
+
+    bind(GitpodTaskServer).toDynamicValue(context => WebSocketConnectionProvider.createProxy(context.container, gitpodTaskServicePath)).inSingletonScope();
+    bind(FrontendApplicationContribution).to(GitpodTaskContribution).inSingletonScope();
 
     bind(GitpodShareWidget).toSelf().inSingletonScope();
     bind(GitpodShareDialog).toSelf().inSingletonScope();
@@ -115,9 +119,6 @@ export default new ContainerModule((bind, unbind, isBound, rebind) => {
 
     bind(CliServiceContribution).toSelf().inSingletonScope();
     bind(FrontendApplicationContribution).toService(CliServiceContribution);
-
-    bind(ContentReadyServiceServer).toDynamicValue(context => WebSocketConnectionProvider.createProxy(context.container, ContentReadyService.SERVICE_PATH)).inSingletonScope();
-    bind(ContentReadyService).toSelf().inSingletonScope();
 
     bind(GitpodPortsService).toSelf().inSingletonScope();
 
